@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Contador de Cofre</title>
+<style>
+:root{--bg:#f3efe6;--bg2:#ebe4d3;--card:#fffdf8;--tx:#2a2218;--mut:#7b6f5c;--gold:#c98a0b;--gold2:#f0b429;--red:#c0392b;--ok:#1f9d55;--bd:#e3d9c3;--ring:#e8dfc9;--sh:0 6px 20px rgba(80,60,20,.10);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1118;--bg2:#151a26;--card:#1a2030;--tx:#f1ede3;--mut:#9ba3b8;--gold:#f0b429;--gold2:#ffd166;--red:#ff6b5b;--ok:#4cd387;--bd:#2a3247;--ring:#2a3247;--sh:0 8px 24px rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0e1118;--bg2:#151a26;--card:#1a2030;--tx:#f1ede3;--mut:#9ba3b8;--gold:#f0b429;--gold2:#ffd166;--red:#ff6b5b;--ok:#4cd387;--bd:#2a3247;--ring:#2a3247;--sh:0 8px 24px rgba(0,0,0,.35);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(1200px 500px at 50% -100px,var(--bg2),var(--bg));background-color:var(--bg);color:var(--tx);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+main{max-width:600px;margin:0 auto;padding:18px 14px 40px}
+header{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 16px}
+h1{font-size:1.25rem;margin:0;letter-spacing:.2px}
+h1 small{display:block;font-weight:500;color:var(--mut);font-size:.8rem;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:18px;margin-bottom:14px;box-shadow:var(--sh)}
+.lbl{color:var(--mut);font-size:.78rem;text-transform:uppercase;letter-spacing:.8px;font-weight:600}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:inherit;border:1px solid var(--bd);background:transparent;color:var(--tx);border-radius:12px;padding:12px 14px;cursor:pointer;flex:1;min-width:60px;transition:transform .08s,background .15s}
+button:active{transform:scale(.96)}
+button.p{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a2218;border-color:transparent;font-weight:700}
+.seg{display:flex;background:var(--bg2);border-radius:14px;padding:4px;gap:4px;margin-top:8px}
+.seg button{border:0;border-radius:11px;padding:10px 8px;font-size:.9rem}
+.seg button.on{background:var(--card);box-shadow:var(--sh);font-weight:700}
+.seg button.on.t{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a2218}
+.note{color:var(--mut);font-size:.85rem;margin:8px 2px 0}
+.hero{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:150px;height:150px;flex:0 0 150px}
+.ring svg{transform:rotate(-90deg)}
+.ring .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring b{font-size:1.9rem;line-height:1}
+.ring span{font-size:.7rem;color:var(--mut);margin-top:4px}
+.stats{flex:1;display:grid;gap:10px}
+.stat b{display:block;font-size:1.5rem;line-height:1.1}
+.stat span{color:var(--mut);font-size:.8rem}
+.ms{margin-top:14px}
+.m{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:7px 0;font-size:.92rem}
+.m .bar{height:8px;background:var(--ring);border-radius:6px;overflow:hidden}
+.m .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:6px;transition:width .4s}
+.m em{font-style:normal;color:var(--mut);font-variant-numeric:tabular-nums;min-width:86px;text-align:right}
+.m.done em{color:var(--ok);font-weight:700}
+.big{font-size:3rem;font-weight:800;line-height:1;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+input{font:inherit;width:100%;padding:12px;border-radius:12px;border:1px solid var(--bd);background:var(--bg2);color:var(--tx)}
+.cd{font-size:2.2rem;font-weight:800;font-variant-numeric:tabular-nums;margin:4px 0}
+.live{color:var(--ok)}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);margin-right:8px;animation:pl 1.2s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(31,157,85,.6)}100%{box-shadow:0 0 0 12px rgba(31,157,85,0)}}
+.sess{display:flex;justify-content:space-between;padding:9px 0;border-top:1px solid var(--bd);font-size:.92rem}
+.sess span:last-child{color:var(--mut)}
+.pill{display:inline-block;padding:3px 10px;border-radius:99px;background:var(--bg2);color:var(--mut);font-size:.75rem;font-weight:600}
+#fx{position:fixed;left:50%;top:18%;transform:translateX(-50%);pointer-events:none;font-weight:800;color:var(--gold);opacity:0;font-size:1.6rem}
+#fx.go{animation:up .7s ease-out}
+@keyframes up{0%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-60px)}}
+@media (max-width:440px){.hero{flex-direction:column}.stats{width:100%;grid-template-columns:1fr 1fr}}
+:root{--bg:#f6f2ff;--bg2:#e9e1fb;--card:#fffdff;--tx:#241c3a;--mut:#6b6286;--gold:#c76a00;--gold2:#ffb454;--sea:#0b8566;--red:#d6336c;--ok:#1f9d55;--bd:#ddd3f5;--ring:#e4dbf8;--sh:0 8px 22px rgba(70,40,140,.13)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#140f24;--bg2:#1e1736;--card:#251c40;--tx:#f3effc;--mut:#a79fc4;--gold:#ffb454;--gold2:#ffd08a;--sea:#4ee0b5;--red:#ff6b9a;--ok:#4cd387;--bd:#392d5c;--ring:#392d5c;--sh:0 10px 28px rgba(0,0,0,.45)}}
+:root[data-theme="dark"]{--bg:#140f24;--bg2:#1e1736;--card:#251c40;--tx:#f3effc;--mut:#a79fc4;--gold:#ffb454;--gold2:#ffd08a;--sea:#4ee0b5;--red:#ff6b9a;--ok:#4cd387;--bd:#392d5c;--ring:#392d5c;--sh:0 10px 28px rgba(0,0,0,.45)}
+body{background:radial-gradient(700px 380px at 92% -60px,rgba(214,51,108,.16),transparent 70%),radial-gradient(800px 420px at 4% -80px,rgba(124,92,255,.24),transparent 70%),var(--bg);background-attachment:fixed}
+main{position:relative;z-index:1}
+h1{color:var(--gold)}
+header{position:relative;padding-bottom:16px;margin-bottom:18px}
+header::after{content:"";position:absolute;left:0;right:0;bottom:0;height:6px;border-radius:4px;background:repeating-linear-gradient(135deg,var(--gold) 0 7px,var(--gold2) 7px 14px);opacity:.8}
+.pill{background:var(--bg2);border:1px solid var(--gold);color:var(--gold)}
+.card{position:relative;overflow:hidden}
+.card::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:linear-gradient(90deg,var(--gold2),var(--sea),var(--red))}
+.card::after{position:absolute;right:12px;bottom:4px;font-size:2.8rem;opacity:.16;pointer-events:none;animation:bob 5s ease-in-out infinite}
+.card:nth-of-type(1)::after{content:"⚓"}
+.card:nth-of-type(2)::after{content:"🪙"}
+.card:nth-of-type(3)::after{content:"🗺️"}
+.card:nth-of-type(4)::after{content:"⏳"}
+button[data-n="10"]{background:linear-gradient(135deg,#8ff0d0,var(--sea));color:#06222a}
+button[data-n="100"]{background:linear-gradient(135deg,#ff9fc0,var(--red));color:#2a0d1a}
+.seg button.on.t{background:linear-gradient(135deg,var(--sea),#8ff0d0);color:#06222a}
+#g stop:first-child{stop-color:var(--gold2)}
+#g stop:last-child{stop-color:var(--red)}
+.m .bar i{background:linear-gradient(90deg,var(--sea),var(--gold2))}
+.lbl{color:var(--sea)}
+.live{color:var(--ok)}
+.decor{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.waves{position:absolute;left:0;bottom:0;width:100%;height:170px}
+.w1{fill:var(--sea);opacity:.16;animation:sway 14s linear infinite}
+.w2{fill:var(--gold);opacity:.10;animation:sway 22s linear infinite reverse}
+.st{position:absolute;color:var(--gold2);opacity:.5;animation:tw 3.5s ease-in-out infinite}
+.s1{left:6%;top:12%;font-size:1.4rem}.s2{left:88%;top:20%;font-size:1.1rem;animation-delay:.8s}.s3{left:46%;top:6%;font-size:.9rem;animation-delay:1.6s}.s4{left:94%;top:62%;font-size:1.3rem;animation-delay:2.2s}.s5{left:3%;top:58%;font-size:1rem;animation-delay:1.1s}
+.fl{position:absolute;font-size:2.2rem;opacity:.28;animation:bob 6s ease-in-out infinite}
+.f1{left:2%;top:34%}.f2{right:2%;top:44%;animation-delay:1.5s}.f3{right:3%;top:8%;animation-delay:3s}
+.foot{text-align:center;color:var(--mut);margin:22px 0 0;font-weight:600}
+.foot small{display:block;font-weight:500;margin-top:4px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes tw{0%,100%{opacity:.15;transform:scale(.85)}50%{opacity:.65;transform:scale(1.15)}}
+@keyframes sway{from{transform:translateX(0)}to{transform:translateX(-600px)}}
+.who{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:12px 14px;margin-bottom:14px;box-shadow:var(--sh)}
+#whoView{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:1.05rem}
+#whoView button,#whoSave{flex:0 0 auto}
+#whoForm{flex-wrap:nowrap}
+#whoView[hidden],#whoForm[hidden]{display:none}
+.tzw{max-height:340px;overflow:auto;border:1px solid var(--bd);border-radius:12px}
+table.tz{width:100%;border-collapse:collapse;font-size:.9rem}
+table.tz th{position:sticky;top:0;background:var(--bg2);text-align:left;padding:9px 10px;font-size:.75rem;text-transform:uppercase;letter-spacing:.6px;color:var(--sea)}
+table.tz td{padding:8px 10px;border-top:1px solid var(--bd);font-variant-numeric:tabular-nums;white-space:nowrap}
+table.tz td:first-child{white-space:normal;font-weight:600}
+table.tz tr.me td{background:var(--bg2);color:var(--gold)}
+table.tz td small{color:var(--mut);font-weight:400}
+.card:nth-of-type(5)::after{content:"🏆"}
+.rkr{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:center;padding:10px 8px;border-top:1px solid var(--bd);border-radius:10px}
+.rkr.me{background:var(--bg2);border-top-color:transparent}
+.rkr .pos{font-size:1.3rem;text-align:center}
+.rkr b{display:block;line-height:1.2;overflow-wrap:anywhere}
+.rkr small{color:var(--mut)}
+.rkr .num{text-align:right;font-weight:800;font-size:1.2rem;font-variant-numeric:tabular-nums}
+.rkr .num small{display:block;font-weight:500;font-size:.75rem}
+#join[hidden],#leave[hidden]{display:none}
+.card:nth-of-type(1)::after{content:"⚓"}
+.card:nth-of-type(2)::after{content:"🪙"}
+.card:nth-of-type(3)::after{content:"🎯"}
+.card:nth-of-type(4)::after{content:"🗺️"}
+.card:nth-of-type(5)::after{content:"💡"}
+.card:nth-of-type(6)::after{content:"⏳"}
+.card:nth-of-type(7)::after{content:"🏆"}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.chips button{flex:0 0 auto;padding:7px 12px;border-radius:99px;font-size:.85rem;min-width:0}
+.chips button.on{background:var(--sea);color:#10241d;border-color:var(--sea);font-weight:700}
+#map{width:100%;height:auto;display:block;border-radius:14px;background:linear-gradient(180deg,var(--bg2),var(--card));border:1px solid var(--bd)}
+.isl{fill:var(--card);stroke:var(--gold);stroke-width:2;stroke-dasharray:6 5}
+.g{cursor:pointer;outline:none}
+.bb{fill:var(--gold2);opacity:.9;stroke:var(--gold);stroke-width:2;transition:all .2s}
+.g:hover .bb,.g:focus .bb{opacity:1;stroke:var(--tx)}
+.g.sel .bb{fill:var(--sea);stroke:var(--tx);stroke-width:3}
+.bt{font:800 14px system-ui,sans-serif;fill:#241c3a;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.bl{font:600 11px system-ui,sans-serif;fill:var(--tx);text-anchor:middle;pointer-events:none}
+.poi{margin-top:10px;padding:12px 14px;border-radius:12px;background:var(--bg2);border-left:4px solid var(--gold)}
+.poi b{font-size:1.05rem}
+.poi .k{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0;font-size:.9rem;color:var(--mut)}
+.poi .k span b{color:var(--tx);font-size:1rem}
+table.tz tr.cl{cursor:pointer}
+table.tz tr.cl.on td{background:var(--bg2);color:var(--sea)}
+table.tz td.n{text-align:center}
+.tips{margin:8px 0 0;padding-left:20px}
+.tips li{margin:7px 0;font-size:.93rem}
+.tips li::marker{color:var(--gold)}
+.best{display:grid;gap:8px;margin-top:8px}
+.best div{display:grid;grid-template-columns:34px 1fr;gap:8px;align-items:start;padding:10px;border-radius:12px;background:var(--bg2);font-size:.92rem}
+.best span{font-size:1.3rem;text-align:center}
+.best b{display:block}
+.best small{color:var(--mut)}
+.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;display:flex;gap:6px;overflow-x:auto;padding:8px;margin:0 0 14px;background:var(--card);border:1px solid var(--bd);border-radius:16px;box-shadow:var(--sh);scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tabs button{flex:1 0 auto;white-space:nowrap;border:0;border-radius:11px;padding:10px 14px;font-size:.92rem}
+.tabs button.on{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a2218;font-weight:700}
+.tab{display:none}
+.tab.on{display:block;animation:fi .25s ease-out}
+@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.card:nth-of-type(1)::after{content:"⚓"}
+.card:nth-of-type(2)::after{content:"🪙"}
+.card:nth-of-type(3)::after{content:"🎯"}
+#mapCard::after{content:"🗺️"}
+#tipsCard::after{content:"💡"}
+#hrCard::after{content:"⏳"}
+#rkCard::after{content:"🏆"}
+main{padding-bottom:120px}
+h1{font-size:1.55rem;letter-spacing:-.3px;background:linear-gradient(90deg,var(--gold2),var(--red));-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 small{-webkit-text-fill-color:var(--mut);color:var(--mut);letter-spacing:0}
+.card,.who{border-radius:22px}
+.card{padding:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.lbl{display:flex;align-items:center;gap:8px}
+.lbl::before{content:"";width:5px;height:14px;border-radius:3px;background:linear-gradient(var(--gold2),var(--red))}
+.ring{filter:drop-shadow(0 0 14px rgba(255,180,84,.35))}
+.stat b{font-size:1.7rem}
+.tabs{position:fixed;left:50%;transform:translateX(-50%);top:auto;bottom:0;width:min(620px,100%);margin:0;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;border:1px solid var(--bd);border-bottom:0;background:var(--card);background:color-mix(in srgb,var(--card) 90%,transparent);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);z-index:20;overflow:visible;gap:4px;box-shadow:0 -8px 28px rgba(0,0,0,.18)}
+.tabs button{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 2px;border-radius:14px;font-size:.7rem;font-weight:600;color:var(--mut);background:transparent;white-space:nowrap}
+.tabs button i{font-style:normal;font-size:1.4rem;line-height:1;transition:transform .2s}
+.tabs button.on{background:var(--bg2);color:var(--gold)}
+.tabs button.on i{transform:translateY(-2px) scale(1.15)}
+.bigbtn{width:100%;padding:18px;margin:12px 0;font-size:1.25rem;font-weight:800;border:0;border-radius:18px;background:linear-gradient(135deg,var(--gold2),var(--gold));color:#2a2218;box-shadow:0 10px 24px rgba(255,160,40,.32)}
+.pm{display:grid;gap:8px}
+.pmr{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.pmr button{padding:13px 6px;font-weight:700;font-size:1.02rem}
+button.m{border-color:var(--red);color:var(--red);background:transparent;font-weight:700}
+button.m:active{background:var(--red);color:#fff}
+body.live .pill{animation:pl 1.4s infinite;border-color:var(--ok);color:var(--ok)}
+.maptools{margin-top:10px}
+.maptools button{flex:1 1 auto;font-size:.85rem;padding:9px 10px}
+#map.edit .g{cursor:grab;touch-action:none}
+#map.edit .bb{stroke-dasharray:4 3}
+.bl{paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round}
+@media (prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+</head>
+<body>
+<div id="fx"></div>
+<div class="decor" aria-hidden="true">
+  <span class="st s1">✦</span><span class="st s2">✧</span><span class="st s3">✦</span><span class="st s4">✧</span><span class="st s5">✦</span>
+  <span class="fl f1">🧭</span><span class="fl f2">💎</span><span class="fl f3">🦜</span>
+  <svg class="waves" viewBox="0 0 1200 200" preserveAspectRatio="none">
+    <path class="w1" d="M0 110 Q150 70 300 110 T600 110 T900 110 T1200 110 T1500 110 T1800 110 V200 H0Z"/>
+    <path class="w2" d="M0 140 Q150 100 300 140 T600 140 T900 140 T1200 140 T1500 140 T1800 140 V200 H0Z"/>
+  </svg>
+</div>
+<main>
+<header>
+  <h1>🏴‍☠️ Token pirata<small>Contador de cofres · Fortnite x One Piece</small></h1>
+  <span class="pill" id="pill">Modo normal</span>
+</header>
+
+<section class="who">
+  <div id="whoView" hidden><span>👤 <b id="whoName"></b></span><button id="whoEdit">Cambiar</button></div>
+  <div id="whoForm" class="row"><input id="whoIn" maxlength="20" placeholder="Escribe tu username" autocomplete="off"><button class="p" id="whoSave">Guardar</button></div>
+</section>
+
+<nav class="tabs" id="tabs">
+  <button data-t="main" class="on"><i>🏠</i><span>Contador</span></button>
+  <button data-t="mapa"><i>🗺️</i><span>Mapa</span></button>
+  <button data-t="guia"><i>💡</i><span>Guía</span></button>
+  <button data-t="horas"><i>⏳</i><span>Horarios</span></button>
+  <button data-t="rank"><i>🏆</i><span>Ranking</span></button>
+</nav>
+
+<section class="tab on" id="t-main">
+<div class="card">
+  <div class="hero">
+    <div class="ring">
+      <svg width="150" height="150" viewBox="0 0 120 120">
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd166"/><stop offset="1" stop-color="#c98a0b"/></linearGradient></defs>
+        <circle cx="60" cy="60" r="54" fill="none" stroke="var(--ring)" stroke-width="10"/>
+        <circle id="arc" cx="60" cy="60" r="54" fill="none" stroke="url(#g)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29" style="transition:stroke-dashoffset .5s"/>
+      </svg>
+      <div class="c"><b id="prob">0%</b><span>prob. acumulada</span></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="total">0</b><span>cofres abiertos</span></div>
+      <div class="stat"><b id="luck">0%</b><span>de lo esperado (1 token)</span></div>
+      <div class="stat"><b id="split">0 / 0</b><span>normal / tesoro</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="lbl">Modo de los cofres nuevos</div>
+  <div class="seg">
+    <button id="mN">Normal · 1 en 137.500</button>
+    <button id="mT" class="t">Tesoro · 1 en 68.750</button>
+  </div>
+  <p class="note" id="auto"></p>
+
+  <div class="lbl" style="margin-top:18px">Cofres</div>
+  <button id="big" class="bigbtn">＋ Abrí un cofre</button>
+  <div class="pm">
+    <div class="pmr"><button class="p" data-n="1">+1</button><button class="p" data-n="10">+10</button><button class="p" data-n="100">+100</button></div>
+    <div class="pmr"><button class="m" data-m="1">−1</button><button class="m" data-m="10">−10</button><button class="m" data-m="100">−100</button></div>
+  </div>
+  <div class="row" style="margin-top:10px;flex-wrap:nowrap">
+    <input id="addN" type="number" min="1" inputmode="numeric" placeholder="Cantidad exacta, ej. 2500">
+    <button id="addB" class="p" style="flex:0 0 84px">Sumar</button>
+    <button id="subB" class="m" style="flex:0 0 84px">Restar</button>
+  </div>
+  <button id="undo" style="width:100%;margin-top:10px">↩ Deshacer último cambio</button>
+  <p class="note">Al restar se descuenta del modo elegido arriba. Atajos: <b>Espacio</b> o <b>+</b> suma 1 · <b>−</b> resta 1 · <b>Z</b> deshace.</p>
+</div>
+
+<div class="card">
+  <div class="lbl">Cuánto te falta (en el modo elegido)</div>
+  <div class="ms" id="tbl"></div>
+  <p class="note">Nunca llega al 100 %: cada cofre es independiente y no hay “suerte acumulada”.</p>
+</div>
+
+<button id="reset" style="width:100%;color:var(--red)">Reiniciar todo</button>
+</section>
+<section class="tab" id="t-mapa">
+<div class="card" id="mapCard">
+  <div class="lbl">Mapa de cofres · Isla Calavera</div>
+  <div class="chips" id="chips"></div>
+  <svg id="map" viewBox="0 0 600 420" role="img" aria-label="Mapa de cofres por zona">
+    <image id="mapImg" x="0" y="0" width="600" height="420" preserveAspectRatio="none" style="display:none"/>
+    <path class="isl" d="M50 210 C45 130 120 70 200 75 C250 60 300 70 350 62 C410 55 440 80 450 130 C460 190 500 230 480 290 C460 350 400 395 330 395 C250 400 190 390 140 350 C85 320 52 270 50 210Z"/>
+    <ellipse class="isl" cx="525" cy="70" rx="55" ry="34"/>
+    <g id="bub"></g>
+  </svg>
+  <div class="poi" id="poi"></div>
+  <div class="row maptools">
+    <button id="upImg">📷 Subir imagen del mapa</button>
+    <button id="editPos">✋ Ajustar posiciones</button>
+    <button id="resetMap">Restablecer</button>
+    <input type="file" id="fileMap" accept="image/*" hidden>
+  </div>
+  <div class="chips" id="unplaced"></div>
+  <p class="note" id="mapNote"></p>
+  <div class="tzw" style="margin-top:10px"><table class="tz"><thead><tr><th>Lugar</th><th>Norm.</th><th>Raros</th><th>Ent.</th></tr></thead><tbody id="cb"></tbody></table></div>
+</div>
+
+</section>
+<section class="tab" id="t-guia">
+<div class="card" id="tipsCard">
+  <div class="lbl">Mejores lugares para caer</div>
+  <div class="best">
+    <div><span>🥇</span><p style="margin:0"><b>Lantern Landing</b>45 cofres + 4 raros y bóveda propia. La mejor opción general.<small> Cerca hay un puzzle con 2 cofres raros.</small></p></div>
+    <div><span>🥈</span><p style="margin:0"><b>Arlong Park</b>35 cofres en un espacio pequeño: más aperturas por minuto y menos peleas al inicio.<small> Combínalo con Lantern Landing (80+ cofres).</small></p></div>
+    <div><span>🥉</span><p style="margin:0"><b>Rubber Resort</b>El que más cofres tiene (47) y más raros (6).<small> Es grande, así que cuesta más recorrerlo.</small></p></div>
+    <div><span>4️⃣</span><p style="margin:0"><b>Loguetown</b>41 cofres + 4 raros. Recórrelo por sectores.</p></div>
+    <div><span>5️⃣</span><p style="margin:0"><b>The Chest</b>34 cofres enterrados, más de la mitad de los de la isla.<small> Con el Sprite Plunderarrgh los abres más rápido.</small></p></div>
+  </div>
+  <div class="lbl" style="margin-top:18px">Consejos</div>
+  <ul class="tips">
+    <li><b>Ningún lugar sube la probabilidad.</b> Todos los cofres tienen la misma. Lo que ayuda es abrir más cofres por partida.</li>
+    <li><b>Los cofres se rellenan con el tiempo.</b> Vuelve a un lugar que ya limpiaste si el círculo te lo permite.</li>
+    <li><b>Prioriza cofres sobre peleas.</b> El token puede salir de cofres normales, raros, de sprite y enterrados.</li>
+    <li><b>Juega en escuadrón</b> y, si puedes, durante las Horas del Tesoro (1 en 68.750).</li>
+    <li><b>Busca los secretos:</b> el puzzle de la estatua de rana cerca de Lantern Landing y la sala tras la cascada de Fortune’s Fort tienen cofres raros y de sprite.</li>
+    <li><b>Desconfía de las “brújulas” y mapas de Creativo.</b> El token solo existe en Battle Royale y Cero Construcción, y no hay forma de detectarlo.</li>
+  </ul>
+</div>
+
+</section>
+<section class="tab" id="t-horas">
+<div class="card" id="hrCard">
+  <div class="lbl">Horas del Tesoro</div>
+  <div class="cd" id="cd">—</div>
+  <div class="note" id="cdl" style="margin:0 0 10px"></div>
+  <input id="tzq" placeholder="🔎 Buscar tu país…" autocomplete="off" style="margin-bottom:8px">
+  <div class="tzw"><table class="tz"><thead><tr><th>País</th><th>Sesión 1</th><th>Sesión 2</th></tr></thead><tbody id="tzb"></tbody></table></div>
+  <p class="note" id="tzd" style="margin-top:6px"></p>
+  <p class="note">Según TV Azteca (10 nov. 2026), Epic confirmó Horas del Tesoro todos los sábados en dos sesiones de 2 horas: 13:00–15:00 y 20:00–22:00 hora de Ciudad de México. La tabla convierte esas horas a cada país; “dom” significa que cae el domingo allá. Confírmalas en el juego, porque Epic puede cambiarlas.</p>
+</div>
+
+</section>
+<section class="tab" id="t-rank">
+<div class="card" id="rkCard">
+  <div class="lbl">🏆 Clasificación</div>
+  <p class="note" id="rkMsg" style="margin-top:8px">Cargando clasificación…</p>
+  <div id="rk"></div>
+  <div class="row" style="margin-top:10px">
+    <button id="join" class="p" hidden>Unirme a la clasificación</button>
+    <button id="leave" hidden>Salir</button>
+  </div>
+  <p class="note">Se ordena por cofres abiertos. Cada quien anota los suyos, así que es un juego de confianza entre amigos.</p>
+</div>
+
+</section>
+<p class="foot">⚓ ¡Buena caza, pirata! ⚓<small>Cada cofre es una nueva oportunidad 🪙</small></p>
+</main>
+
+<script>
+const P={n:1/137500,t:1/68750};
+let S={n:0,t:0,mode:'n',hist:[]};
+try{const x=localStorage.getItem('cofres2');if(x)S=Object.assign(S,JSON.parse(x))}catch(e){}
+const $=id=>document.getElementById(id);
+const fmt=v=>Math.round(v).toLocaleString('es-CL');
+const H=3600000;
+function save(){try{localStorage.setItem('cofres2',JSON.stringify(S))}catch(e){}if(window.queueSync)queueSync()}
+function miss(){return Math.pow(1-P.n,S.n)*Math.pow(1-P.t,S.t)}
+function render(){
+  $('mN').classList.toggle('on',S.mode==='n');
+  $('mT').classList.toggle('on',S.mode==='t');
+  $('pill').textContent=S.mode==='t'?'⚡ Modo tesoro':'Modo normal';
+  const tot=S.n+S.t;
+  $('total').textContent=fmt(tot);
+  $('split').textContent=fmt(S.n)+' / '+fmt(S.t);
+  const pr=(1-miss())*100;
+  $('prob').textContent=pr.toFixed(pr<10?2:1)+'%';
+  $('arc').style.strokeDashoffset=339.29*(1-pr/100);
+  const exp=S.n*P.n+S.t*P.t;
+  $('luck').textContent=Math.round(exp*100)+'%';
+  const p=P[S.mode];
+  $('tbl').innerHTML=[0.5,0.75,0.9,0.95,0.99].map(g=>{
+    const need=Math.max(0,Math.ceil(Math.log((1-g)/miss())/Math.log(1-p)));
+    const w=Math.min(100,pr/(g*100)*100);
+    return '<div class="m'+(need?'':' done')+'"><span>'+g*100+'%</span><div class="bar"><i style="width:'+w+'%"></i></div><em>'+(need?'faltan '+fmt(need):'¡listo!')+'</em></div>';
+  }).join('');
+  save();
+}
+function pop(k){const f=$('fx');f.textContent=(k>0?'+':'−')+fmt(Math.abs(k));f.classList.remove('go');void f.offsetWidth;f.classList.add('go')}
+function add(k){if(k>0){S[S.mode]+=k;S.hist.push([S.mode,k]);render();pop(k);try{navigator.vibrate&&navigator.vibrate(15)}catch(e){}}}
+function undo(){const h=S.hist.pop();if(h){S[h[0]]=Math.max(0,S[h[0]]-h[1]);render()}}
+document.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>add(+b.dataset.n));
+$('addB').onclick=()=>{add(Math.floor(+$('addN').value)||0);$('addN').value=''};
+$('addN').onkeydown=e=>{if(e.key==='Enter')$('addB').click();e.stopPropagation()};
+$('undo').onclick=undo;
+function sub(k){k=Math.min(k,S[S.mode]);if(k>0){S[S.mode]-=k;S.hist.push([S.mode,-k]);render();pop(-k)}}
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>sub(+b.dataset.m));
+$('big').onclick=()=>add(1);
+$('subB').onclick=()=>{sub(Math.floor(+$('addN').value)||0);$('addN').value=''};
+$('mN').onclick=()=>{S.mode='n';render()};
+$('mT').onclick=()=>{S.mode='t';render()};
+$('reset').onclick=()=>{if(confirm('¿Reiniciar todo?')){S={n:0,t:0,mode:'n',hist:[]};render()}};
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||curTab!=='main')return;
+  if(e.key===' '||e.key==='+'){e.preventDefault();add(1)}
+  else if(e.key==='-')sub(1);
+  else if(e.key==='z'||e.key==='Z')undo();
+});
+
+/* Sábados, 13:00–15:00 y 20:00–22:00 en Ciudad de México (UTC−6) */
+function sessions(now){
+  const out={};
+  for(let k=-2;k<=21;k++){
+    const mx=new Date(now+k*24*H-6*H);
+    if(mx.getUTCDay()!==6)continue;
+    const y=mx.getUTCFullYear(),m=mx.getUTCMonth(),d=mx.getUTCDate();
+    [13,20].forEach(h=>{const s=Date.UTC(y,m,d,h+6);out[s]=[s,s+2*H]});
+  }
+  return Object.values(out).sort((a,b)=>a[0]-b[0]).filter(x=>x[1]>now);
+}
+const f1=new Intl.DateTimeFormat('es-CL',{weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit',hour12:false});
+const f2=new Intl.DateTimeFormat('es-CL',{hour:'2-digit',minute:'2-digit',hour12:false});
+const dur=ms=>{const s=Math.max(0,Math.floor(ms/1000));const h=Math.floor(s/3600),m=Math.floor(s%3600/60),c=s%60,d=Math.floor(h/24);
+  return (d?d+' d ':'')+String(h%24).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(c).padStart(2,'0')};
+let lastActive=null,tzKey=null,tzBase=0;
+const ZONES=[['México','America/Mexico_City'],['Chile','America/Santiago'],['Argentina','America/Argentina/Buenos_Aires'],['Colombia','America/Bogota'],['Perú','America/Lima'],['Ecuador','America/Guayaquil'],['Venezuela','America/Caracas'],['Bolivia','America/La_Paz'],['Paraguay','America/Asuncion'],['Uruguay','America/Montevideo'],['Brasil (Brasilia)','America/Sao_Paulo'],['Costa Rica','America/Costa_Rica'],['Panamá','America/Panama'],['Guatemala','America/Guatemala'],['El Salvador','America/El_Salvador'],['Honduras','America/Tegucigalpa'],['Nicaragua','America/Managua'],['Rep. Dominicana','America/Santo_Domingo'],['Puerto Rico','America/Puerto_Rico'],['Cuba','America/Havana'],['EE. UU. (Este)','America/New_York'],['EE. UU. (Centro)','America/Chicago'],['EE. UU. (Pacífico)','America/Los_Angeles'],['Canadá (Toronto)','America/Toronto'],['España','Europe/Madrid'],['Portugal','Europe/Lisbon'],['Reino Unido','Europe/London'],['Francia','Europe/Paris'],['Alemania','Europe/Berlin'],['Italia','Europe/Rome'],['Rusia (Moscú)','Europe/Moscow'],['Turquía','Europe/Istanbul'],['Arabia Saudita','Asia/Riyadh'],['India','Asia/Kolkata'],['Filipinas','Asia/Manila'],['China','Asia/Shanghai'],['Japón','Asia/Tokyo'],['Corea del Sur','Asia/Seoul'],['Australia (Sídney)','Australia/Sydney'],['Nueva Zelanda','Pacific/Auckland']];
+function zp(ts,tz){const o={};new Intl.DateTimeFormat('es',{timeZone:tz,weekday:'short',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(ts).forEach(p=>{o[p.type]=p.value});return o}
+function rng(st,tz){const a=zp(st,tz),b=zp(st+2*H,tz);const w=a.weekday.toLowerCase().startsWith('sá')?'':'<small>'+a.weekday.replace('.','')+'</small> ';return w+a.hour+':'+a.minute+'–'+b.hour+':'+b.minute}
+function drawTz(first){
+  const mx=new Date(first-6*H),y=mx.getUTCFullYear(),m=mx.getUTCMonth(),d=mx.getUTCDate();
+  tzBase=[Date.UTC(y,m,d,19),Date.UTC(y,m,d,26)];
+  const mine=Intl.DateTimeFormat().resolvedOptions().timeZone,q=($('tzq').value||'').toLowerCase().trim();
+  let rows=ZONES.filter(z=>!q||z[0].toLowerCase().includes(q));
+  const row=(n,tz,me)=>'<tr'+(me?' class="me"':'')+'><td>'+n+'</td><td>'+rng(tzBase[0],tz)+'</td><td>'+rng(tzBase[1],tz)+'</td></tr>';
+  $('tzb').innerHTML=(q?'':row('📍 Tu dispositivo',mine,true))+rows.map(z=>row(z[0],z[1],false)).join('')||'<tr><td colspan="3">No encontré ese país.</td></tr>';
+  $('tzd').textContent='Sábado '+new Intl.DateTimeFormat('es',{timeZone:'America/Mexico_City',day:'numeric',month:'long'}).format(tzBase[0])+' (fecha en México). Los horarios de verano se ajustan solos.';
+}
+$('tzq').oninput=()=>{if(Array.isArray(tzBase))drawTz(tzBase[0]+0)};
+function tick(){
+  const now=Date.now(),ss=sessions(now),cur=ss.find(x=>x[0]<=now&&now<x[1]);
+  if(cur){
+    $('cd').innerHTML='<span class="dot"></span><span class="live">ACTIVA</span> · '+dur(cur[1]-now);
+    $('cdl').textContent='Tiempo restante de la hora del tesoro actual';
+    $('auto').textContent='Hora del tesoro activa: modo cambiado solo a 1 en 68.750.';
+    if(lastActive===false||lastActive===null){S.mode='t';render()}
+  }else{
+    const nx=ss[0];
+    $('cd').textContent=dur(nx[0]-now);
+    $('cdl').textContent='Próxima: '+f1.format(nx[0])+' a '+f2.format(nx[1]);
+    $('auto').textContent='Cuando empiece una hora del tesoro, el modo cambiará solo.';
+    if(lastActive===true){S.mode='n';render()}
+  }
+  document.body.classList.toggle('live',!!cur);
+  lastActive=!!cur;
+  const dk=Math.floor(ss[0][0]/H/24);if(dk!==tzKey){tzKey=dk;drawTz(ss[0][0])}
+}
+function drawWho(){const u=(S.user||'').trim();$('whoView').hidden=!u;$('whoForm').hidden=!!u;$('whoName').textContent=u}
+function saveWho(){const u=$('whoIn').value.trim().slice(0,20);if(!u)return;S.user=u;save();drawWho()}
+$('whoSave').onclick=saveWho;
+$('whoIn').onkeydown=e=>{e.stopPropagation();if(e.key==='Enter')saveWho()};
+$('whoEdit').onclick=()=>{$('whoView').hidden=true;$('whoForm').hidden=false;$('whoIn').value=S.user||'';$('whoIn').focus()};
+const POIS=[
+{n:'Lantern Landing',r:45,a:4,b:0,x:270,y:205,t:'Mejor lugar general: bóveda propia y un puzzle cercano con 2 cofres raros.'},
+{n:'Arlong Park',r:35,a:0,b:2,x:95,y:215,t:'Compacto: más cofres por minuto. Está en el extremo oeste y suele haber menos peleas.'},
+{n:'Windmill Village',r:29,a:1,b:1,x:165,y:290,t:'Ruta popular junto con Arlong Park.'},
+{n:'Cursed Cavern',r:28,a:0,b:4,x:395,y:195,t:'Zona protegida dentro de una colina, con un puzzle secreto de cofres raros.'},
+{n:'Loguetown',r:41,a:4,b:0,x:235,y:345,t:'Ciudad grande: recórrela por sectores para no repetir calles.'},
+{n:'Plunder Port',r:34,a:0,b:2,x:385,y:335,t:'El lado sur concentra más cofres: dos barcos atracados con varios pisos.'},
+{n:'The Chest',r:10,a:0,b:34,x:165,y:110,t:'Casi todo son cofres enterrados. El Sprite Plunderarrgh los abre más rápido.'},
+{n:'Isla del tesoro',r:0,a:0,b:11,x:525,y:70,t:'Pequeña isla de tesoros enterrados en la esquina noreste.'},
+{n:'Rubber Resort',r:47,a:6,b:2,t:'El que más cofres y más raros tiene. Sin posición confirmada en este mapa.'},
+{n:'Fortune’s Fort',r:47,a:5,b:0,t:'Aprox. 47 cofres. Sala secreta tras una cascada con cofres de sprite y raros. Sin posición confirmada.'},
+{n:'Lil Uzi’s Stronghold',r:33,a:null,b:null,t:'Solo hay dato de cofres normales. Sin posición confirmada.'},
+{n:'Loot Lagoon',r:26,a:4,b:1,t:'Sin posición confirmada en este mapa.'},
+{n:'Busy Bay',r:29,a:4,b:1,t:'Sin posición confirmada en este mapa.'},
+{n:'S.S. Rocky',r:null,a:4,b:null,t:'Barco con 4 cofres raros. Sin posición confirmada.'}
+];
+let mf='all',msel='Lantern Landing';
+const mv=(p,f)=>f==='r'?(p.r||0):f==='a'?(p.a||0):f==='b'?(p.b||0):(p.r||0)+(p.a||0)+(p.b||0);
+const dv=v=>v==null?'—':v;
+const MAP_DATA='';
+if(!S.pos)S.pos={};
+let editing=false,drag=null,MH=420,hasImg=false;
+const gp=p=>S.pos[p.n]||(p.x?[p.x,p.y]:null);
+function drawMap(){
+  const L=[['all','Todos'],['r','Normales'],['a','Raros'],['b','Enterrados']];
+  $('chips').innerHTML=L.map(x=>'<button class="'+(mf===x[0]?'on':'')+'" data-f="'+x[0]+'">'+x[1]+'</button>').join('');
+  document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{mf=b.dataset.f;drawMap()});
+  $('map').classList.toggle('edit',editing);
+  $('editPos').textContent=editing?'✅ Listo':'✋ Ajustar posiciones';
+  $('bub').innerHTML=POIS.filter(gp).map(p=>{const q=gp(p),v=mv(p,mf),r=9+Math.sqrt(v)*3.3;
+    return '<g class="g'+(p.n===msel?' sel':'')+'" data-n="'+p.n+'" tabindex="0" role="button" aria-label="'+p.n+': '+v+'"><circle class="bb" cx="'+q[0]+'" cy="'+q[1]+'" r="'+r.toFixed(1)+'"/><text class="bt" x="'+q[0]+'" y="'+q[1]+'">'+v+'</text><text class="bl" x="'+q[0]+'" y="'+(q[1]+r+13)+'">'+p.n+'</text></g>'}).join('');
+  document.querySelectorAll('#bub .g').forEach(g=>{
+    g.onclick=()=>{if(!editing)pick(g.dataset.n)};
+    g.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(g.dataset.n)}};
+    g.onpointerdown=e=>{if(!editing)return;e.preventDefault();drag=g;try{g.setPointerCapture(e.pointerId)}catch(_){}};
+    g.onpointermove=e=>{if(drag!==g)return;const sv=$('map'),pt=sv.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+      const q=pt.matrixTransform(sv.getScreenCTM().inverse()),x=Math.round(Math.max(0,Math.min(600,q.x))),y=Math.round(Math.max(0,Math.min(MH,q.y)));
+      S.pos[g.dataset.n]=[x,y];const c=g.querySelector('circle'),r=+c.getAttribute('r'),t=g.querySelectorAll('text');
+      c.setAttribute('cx',x);c.setAttribute('cy',y);t[0].setAttribute('x',x);t[0].setAttribute('y',y);t[1].setAttribute('x',x);t[1].setAttribute('y',y+r+13)};
+    g.onpointerup=()=>{if(drag===g){drag=null;save();drawMap()}};
+  });
+  $('unplaced').innerHTML=editing?POIS.filter(p=>!gp(p)).map(p=>'<button data-u="'+p.n+'">＋ '+p.n+'</button>').join(''):'';
+  document.querySelectorAll('#unplaced button').forEach(b=>b.onclick=()=>{S.pos[b.dataset.u]=[300,Math.round(MH/2)];save();drawMap()});
+  const un=POIS.filter(p=>!gp(p)).length;
+  $('mapNote').textContent=(hasImg?'Imagen del mapa cargada. ':'Mapa esquemático: posiciones aproximadas, no es el mapa oficial. ')+(editing?'Arrastra cada burbuja hasta su lugar real y toca “Listo”. ':'Para ubicarlas bien, sube la imagen del mapa y usa “Ajustar posiciones”. ')+(un&&!editing?un+' zonas aún sin posición (solo aparecen en la tabla). ':'')+'Los números salen de guías de la comunidad (Beebom, Dexerto, Game Rant) y pueden variar un poco.';
+  const rows=POIS.slice().sort((a,b)=>mv(b,mf)-mv(a,mf));
+  $('cb').innerHTML=rows.map(p=>'<tr class="cl'+(p.n===msel?' on':'')+'" data-n="'+p.n+'"><td>'+p.n+'</td><td class="n">'+dv(p.r)+'</td><td class="n">'+dv(p.a)+'</td><td class="n">'+dv(p.b)+'</td></tr>').join('');
+  document.querySelectorAll('#cb tr').forEach(t=>t.onclick=()=>pick(t.dataset.n));
+  const p=POIS.find(x=>x.n===msel);
+  if(p){const tot=mv(p,'all');$('poi').innerHTML='<b>'+p.n+'</b><div class="k"><span>Normales <b>'+dv(p.r)+'</b></span><span>Raros <b>'+dv(p.a)+'</b></span><span>Enterrados <b>'+dv(p.b)+'</b></span><span>Total <b>'+tot+'</b></span></div>'+p.t}
+}
+function setMapImg(src){
+  const im=$('mapImg'),sv=$('map'),isl=document.querySelectorAll('#map .isl');
+  if(!src){hasImg=false;MH=420;sv.setAttribute('viewBox','0 0 600 420');im.style.display='none';isl.forEach(e=>e.style.display='');drawMap();return}
+  const t=new Image();
+  t.onload=()=>{hasImg=true;MH=Math.round(600*t.height/t.width);sv.setAttribute('viewBox','0 0 600 '+MH);im.setAttribute('width',600);im.setAttribute('height',MH);im.setAttribute('href',src);im.style.display='';isl.forEach(e=>e.style.display='none');drawMap()};
+  t.src=src;
+}
+function pick(n){msel=n;drawMap()}
+let DB=null,UI=null,ME=null,lastSent,tmr,peers=[];
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function btns(){$('join').hidden=!!S.joined;$('leave').hidden=!S.joined}
+function payload(){return{u:(S.user||'Pirata').slice(0,20),n:S.n,t:S.t,ts:Date.now()}}
+function keyNow(){return(S.user||'')+'|'+S.n+'|'+S.t}
+function queueSync(){
+  if(!DB||!ME||!S.joined||lastSent===undefined||keyNow()===lastSent)return;
+  clearTimeout(tmr);
+  tmr=setTimeout(async()=>{try{await DB.doc('players/'+ME).set(payload());lastSent=keyNow()}catch(e){$('rkMsg').textContent='No pude guardar tu avance en la clasificación.'}},700);
+}
+function drawRank(){
+  const rows=peers.map(d=>{const v=d.data()||{},n=Math.max(0,+v.n||0),t=Math.max(0,+v.t||0);return{id:d.id,u:String(v.u||'Pirata'),tot:n+t,pr:(1-Math.pow(1-P.n,n)*Math.pow(1-P.t,t))*100}}).sort((a,b)=>b.tot-a.tot).slice(0,50);
+  const medal=['🥇','🥈','🥉'];
+  $('rkMsg').textContent=rows.length?'':'Aún no hay nadie. ¡Sé el primero en unirte!';
+  $('rk').innerHTML=rows.map((r,i)=>{const me=r.id===ME;
+    return '<div class="rkr'+(me?' me':'')+'"><span class="pos">'+(medal[i]||(i+1))+'</span><span><b>'+esc(r.u)+(me?' (tú)':'')+'</b><small>prob. '+r.pr.toFixed(1)+'%</small></span><span class="num">'+fmt(r.tot)+'<small>cofres</small></span></div>'}).join('');
+  btns();
+}
+(async()=>{
+  const off=setTimeout(()=>{if(!DB)$('rkMsg').textContent='La clasificación solo funciona al abrir el enlace de Claude con tu sesión iniciada.'},10000);
+  try{
+    const c=window.claude;if(!c||!c.use)return;
+    DB=await c.use('db');UI=await c.use('user');
+    if(!DB||!UI){DB=null;return}
+    ME=await UI.id();if(!ME){DB=null;return}
+    clearTimeout(off);
+    DB.collection('players').onSnapshot(snap=>{
+      peers=snap.docs;
+      const mine=peers.find(d=>d.id===ME);
+      if(mine&&lastSent===undefined){const v=mine.data()||{};S.joined=true;lastSent=(v.u||'')+'|'+(+v.n||0)+'|'+(+v.t||0)}
+      drawRank();
+    },()=>{$('rkMsg').textContent='No pude cargar la clasificación.'});
+    $('join').onclick=async()=>{
+      if(!(S.user||'').trim()){$('rkMsg').textContent='Primero escribe tu username arriba y guárdalo.';return}
+      try{await DB.doc('players/'+ME).set(payload());S.joined=true;lastSent=keyNow();save();btns()}
+      catch(e){$('rkMsg').textContent='No tienes permiso para escribir. Pide al dueño acceso de “interactuar”.'}
+    };
+    $('leave').onclick=async()=>{try{await DB.doc('players/'+ME).delete();S.joined=false;lastSent=undefined;save();btns()}catch(e){}};
+  }catch(e){}
+})();
+$('upImg').onclick=()=>$('fileMap').click();
+$('fileMap').onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();
+  rd.onload=()=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1400/im.width),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+    c.getContext('2d').drawImage(im,0,0,c.width,c.height);const u=c.toDataURL('image/jpeg',.85);try{localStorage.setItem('cofres2img',u)}catch(_){}setMapImg(u)};im.src=rd.result};
+  rd.readAsDataURL(f);e.target.value=''};
+$('editPos').onclick=()=>{editing=!editing;drawMap()};
+$('resetMap').onclick=()=>{if(!confirm('¿Quitar la imagen y las posiciones guardadas?'))return;try{localStorage.removeItem('cofres2img')}catch(e){}S.pos={};save();editing=false;setMapImg('')};
+(function(){let src=MAP_DATA;try{src=src||localStorage.getItem('cofres2img')||''}catch(e){}
+  if(src){setMapImg(src);return}
+  const t=new Image();t.onload=()=>setMapImg('mapa.jpg');t.src='mapa.jpg'})();
+let curTab='main';
+function showTab(t,push){
+  if(!document.getElementById('t-'+t))t='main';
+  curTab=t;
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.id==='t-'+t));
+  document.querySelectorAll('#tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===t));
+  if(push){try{history.replaceState(null,'','#'+t)}catch(e){try{location.hash=t}catch(_){}}}
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>showTab(b.dataset.t,true));
+window.addEventListener('hashchange',()=>showTab((location.hash||'').slice(1)));
+drawWho();drawMap();render();tick();setInterval(tick,1000);
+showTab((location.hash||'').slice(1)||'main');
+</script>
+</body>
+</html>
